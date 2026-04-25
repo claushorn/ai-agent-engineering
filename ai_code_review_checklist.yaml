@@ -1,0 +1,226 @@
+version: 1.0
+
+meta:
+  description: LLM-induced code revision failure modes and detection heuristics
+  intended_use: AI-assisted code review, static/diff analysis
+
+rules:
+
+  - id: CP001
+    category: change_propagation
+    name: signature_drift
+    description: Function signature updated but not consistently across call sites
+    pattern: |
+      def foo(a, b) -> def foo(a, b, c)
+    heuristics:
+      - type: ast
+        check: "function_definition_changed_arity"
+      - type: ast
+        check: "call_sites_with_old_arity_exist"
+      - type: diff
+        check: "function_signature_modified_without_global_refactor"
+    severity: high
+
+  - id: NL001
+    category: non_local_invariants
+    name: schema_validation_mismatch
+    description: Schema updated but validation logic not updated
+    pattern: |
+      schema constraint changed; validation unchanged
+    heuristics:
+      - type: regex
+        check: "schema.*(min|max|range).*changed"
+      - type: regex
+        check: "validate.*unchanged"
+      - type: semantic
+        check: "constraint_mismatch(schema, validation)"
+    severity: high
+
+  - id: AD001
+    category: abstraction_errors
+    name: incorrect_factorization
+    description: Special-case logic lost during refactoring
+    pattern: |
+      conditional branch removed during generalization
+    heuristics:
+      - type: diff
+        check: "conditional_removed"
+      - type: semantic
+        check: "edge_case_behavior_missing"
+    severity: high
+
+  - id: AD002
+    category: abstraction_errors
+    name: premature_abstraction
+    description: Introduced abstraction without multiple use cases
+    pattern: |
+      simple logic replaced with generalized interface
+    heuristics:
+      - type: diff
+        check: "new_indirection_layer_added"
+      - type: metric
+        check: "single_call_site_for_abstraction"
+    severity: medium
+
+  - id: API001
+    category: api_hallucination
+    name: nonexistent_api
+    description: Usage of API not present in target library
+    pattern: |
+      json.parse_file(...)
+    heuristics:
+      - type: ast
+        check: "unresolved_symbol"
+      - type: semantic
+        check: "not_in_library_spec"
+    severity: high
+
+  - id: ST001
+    category: state_semantics
+    name: aliasing_mutation
+    description: Mutation through shared reference not accounted for
+    pattern: |
+      b = a; mutate(b)
+    heuristics:
+      - type: ast
+        check: "assignment_creates_alias"
+      - type: ast
+        check: "mutation_on_alias"
+    severity: high
+
+  - id: ST002
+    category: state_semantics
+    name: lifecycle_violation
+    description: Object used outside intended lifecycle
+    heuristics:
+      - type: semantic
+        check: "use_after_free_or_close"
+    severity: high
+
+  - id: NL002
+    category: non_local_invariants
+    name: incomplete_state_machine
+    description: Missing transitions after modification
+    pattern: |
+      state graph modified but transitions incomplete
+    heuristics:
+      - type: graph
+        check: "unreachable_states"
+      - type: graph
+        check: "missing_edges"
+    severity: high
+
+  - id: RD001
+    category: redundancy
+    name: duplicate_logic
+    description: Same concept implemented multiple times
+    heuristics:
+      - type: ast
+        check: "similar_function_bodies"
+      - type: metric
+        check: "code_similarity > threshold"
+    severity: medium
+
+  - id: RD002
+    category: redundancy
+    name: dead_code
+    description: Unused or stale logic remains
+    heuristics:
+      - type: ast
+        check: "unreferenced_function"
+      - type: diff
+        check: "code_path_no_longer_reachable"
+    severity: medium
+
+  - id: RG001
+    category: regression
+    name: guard_removal
+    description: Safety check removed, reintroducing prior bug
+    pattern: |
+      if x is None: return  -> removed
+    heuristics:
+      - type: diff
+        check: "guard_clause_removed"
+      - type: semantic
+        check: "null_path_unhandled"
+    severity: high
+
+  - id: EC001
+    category: edge_cases
+    name: missing_empty_case
+    description: Empty input not handled
+    pattern: |
+      len(xs) used without zero check
+    heuristics:
+      - type: ast
+        check: "division_by_len_without_guard"
+    severity: high
+
+  - id: EC002
+    category: edge_cases
+    name: race_condition
+    description: Non-atomic check-then-act
+    pattern: |
+      if not exists(x): create(x)
+    heuristics:
+      - type: concurrency
+        check: "non_atomic_sequence"
+    severity: high
+
+  - id: TS001
+    category: testing
+    name: tautological_test
+    description: Test duplicates implementation logic
+    heuristics:
+      - type: ast
+        check: "same_function_used_in_expected_and_actual"
+    severity: medium
+
+  - id: TS002
+    category: testing
+    name: weak_assertion
+    description: Test does not verify correctness
+    pattern: |
+      assert result is not None
+    heuristics:
+      - type: regex
+        check: "assert .* not None"
+    severity: low
+
+  - id: GD001
+    category: spec_drift
+    name: goal_drift
+    description: Implementation no longer satisfies specification
+    heuristics:
+      - type: semantic
+        check: "spec_behavior_mismatch"
+    severity: high
+
+  - id: CTX001
+    category: context_integrity
+    name: context_corruption
+    description: Preconditions or assumptions silently dropped
+    heuristics:
+      - type: diff
+        check: "precondition_removed"
+      - type: semantic
+        check: "input_contract_changed"
+    severity: high
+
+  - id: MT001
+    category: maintainability
+    name: poor_locality
+    description: Related logic scattered across modules
+    heuristics:
+      - type: metric
+        check: "high_cross_module_coupling"
+    severity: medium
+
+  - id: MT002
+    category: maintainability
+    name: comment_code_divergence
+    description: Comments do not reflect implementation
+    heuristics:
+      - type: semantic
+        check: "comment_intent_mismatch"
+    severity: low
