@@ -1,306 +1,78 @@
-# AI Agent Framework for Reliable Code Generation and Review
+# Managing Non-Determinism in AI Coding Agents
 
 ![AI Coding Control Architecture](./assets/ai-agent-engineering.png)
 
-## 1. Overview
+## Overview
 
-This repository presents a structured framework for **AI-assisted software development**, focused on improving the reliability of code generation, modification, and review.
+AI coding agents are highly effective at accelerating implementation, but they are not deterministic systems. Over longer workflows, they tend to lose coherence, reintroduce errors, and drift from intended behavior.
 
-The core problem addressed is:
-
-> Large language models produce locally plausible code that frequently violates global system constraints.
-
-This framework introduces:
-- Explicit **system invariants**
-- A taxonomy of **LLM failure modes**
-- A disciplined **development and review protocol**
-
-The objective is to transform AI-assisted coding from heuristic iteration into a **constraint-driven engineering process**.
+This repository describes a practical control architecture for working with such systems reliably.
 
 ---
 
-## 2. System Philosophy
+## Core Insight
 
-The repository enforces a set of non-negotiable principles:
+The main failure mode is not at the level of single prompts or global configuration, but at the level of **multi-step tasks**.
 
-### 2.1 Invariant-Driven Development
-All components must preserve:
-- **Correctness** — outputs match specification
-- **Consistency** — no divergence across modules
-- **Completeness** — no missing logic or transitions
-- **Single source of truth** — no duplicated logic
+Tasks that span multiple plan–implement–revise cycles lose coherence over time due to context decay.
 
 ---
 
-### 2.2 No Silent Failure
+## Practical Control Architecture
 
-The system must never degrade behavior implicitly.
+To address this, the system introduces an explicit separation of state into three layers:
 
-- No silent fallbacks
-- No hidden defaults that change semantics
+### 1. Global Rules
 
-If an operation cannot be performed:
-- **Fail explicitly with a clear error**
+Project-wide constraints that define invariants, such as:
 
----
+- no silent fallbacks
+- no code duplication
+- explicit failure on invalid assumptions
+- verification of behavior, not plausibility
 
-### 2.3 Global Consistency Over Local Fixes
-
-A correct local change is invalid if it:
-- breaks cross-module invariants
-- introduces inconsistency elsewhere
-- leaves partial updates
+These reduce common errors but do not preserve long-horizon coherence.
 
 ---
 
-### 2.4 Explicit Design Decisions
+### 2. Task Memory (Key Idea)
 
-All non-trivial architectural choices must be:
-- documented
-- justified
-- preserved across changes
+Each non-trivial task maintains a lightweight, persistent state:
 
----
-
-## 3. System Structure
-
-The system is organized around the following conceptual layers:
-
-### 3.1 Research Pipeline
-
-A composable pipeline of transformations:
-
-raw data → features → signals → evaluation → artifacts
-
-
-Each step:
-- consumes defined inputs
-- produces typed outputs
-- satisfies pre/postconditions
-
----
-
-### 3.2 Execution System
-
-Responsible for:
-- real-time strategy execution
-- order generation
-- state management
-
-Key properties:
-- deterministic behavior
-- versioned deployment
-- auditable logs
-
----
-
-### 3.3 Shared Logic
-
-Common components:
-- feature computation
-- strategy logic
-- utilities
-
-Constraint:
-> A concept must have exactly one implementation.
-
----
-
-### 3.4 AI-Assisted Development Layer
-
-The system includes formal constraints for AI-generated code:
-
-- failure mode taxonomy
-- invariant checks
-- structured review process
-
----
-
-## 4. System Invariants
-
-The following invariants must always hold:
-
-### 4.1 Interface Consistency
-All API changes must be propagated to:
-- all call sites
-- all dependent modules
-
----
-
-### 4.2 Data Contract Integrity
-Schemas, validation, and serialization must agree.
-
----
-
-### 4.3 State Machine Completeness
-- No missing transitions
-- No unreachable states
-
----
-
-### 4.4 No Duplicate Logic
-- No competing implementations
-- No diverging helpers
-
----
-
-### 4.5 Deterministic Behavior
-Given the same inputs and state:
-- outputs must be reproducible
-
----
-
-## 5. AI Failure Modes (Summary)
-
-AI-generated code is prone to systematic errors:
-
-### 5.1 Non-Local Failures
-- cross-module invariants broken
-- partial updates
-
-### 5.2 Abstraction Errors
-- premature generalization
-- loss of special-case logic
-
-### 5.3 API Hallucination
-- non-existent functions
-- incorrect signatures
-
-### 5.4 Regression Introduction
-- previously fixed bugs reintroduced
-
-### 5.5 Testing Failures
-- tautological tests
-- weak assertions
-
-A full specification is provided in:
-
-ai_code_review_checklist.yaml 
-
-
----
-
-## 6. Development Workflow
-
-### 6.1 Before Implementing
-
-- Read relevant design decisions
-- Identify invariants affected
-- Verify consistency with system architecture
-
----
-
-### 6.2 During Implementation
-
-- Avoid duplication
-- Avoid premature abstraction
-- Update all dependent components
-
----
-
-### 6.3 After Implementation
-
-- Run tests
-- Review full diff
-- Check against failure modes
-
----
-
-### 6.4 Before Commit
-
-Validate:
-
-- no invariant violations
-- no dead code
-- no partial updates
-- no missing edge cases
-
----
-
-## 7. Testing Principles
-
-Tests must validate **behavior**, not implementation.
-
-### Required:
-- correctness of outputs
-- edge cases (empty, null, boundary)
-- failure modes
-
-### Forbidden:
-- tautological tests
-- assertions that only check existence
-
----
-
-## 8. Debugging Protocol
-
-When investigating issues:
-
-1. Identify the exact version that produced the behavior
-2. Inspect code at that version
-3. Compare against current state
-4. Do not assume HEAD reflects runtime behavior
-
----
-
-## 9. Task Management
-
-Long-running work must be tracked explicitly:
-
-- current state
+- current objective
 - decisions made
-- remaining work
+- completed steps
+- open questions
 
-Work must be:
-- resumable
-- auditable
+This acts as a **continuity layer across agent iterations**, preventing context loss between plan–execution cycles.
 
----
-
-## 10. Environment & Execution
-
-Use the project’s standard tooling consistently.
-
-Example:
-
-uv run <script>
-
-
-Environment must be:
-- reproducible
-- deterministic
+It is the central mechanism that maintains coherence over time.
 
 ---
 
-## 11. Contribution Guidelines
+### 3. Change Artifacts
 
-All contributions must:
+Two complementary logs:
 
-- preserve system invariants
-- include tests
-- avoid duplication
-- avoid silent behavior changes
+- **Changelog**: records what changed and why
+- **Design decisions**: records stable architectural choices
 
-If a change conflicts with existing design:
-- explicitly surface the conflict
-- do not resolve implicitly
+These provide durable reasoning context beyond transient prompts.
 
 ---
 
-## 12. Known Limitations
+## Key Result
 
-- AI-assisted code may violate non-local constraints
-- Static checks cannot capture all semantic errors
-- Some invariants require human validation
+By externalizing task-level state, we:
+
+- reduce context drift
+- maintain coherence across long workflows
+- improve reliability of multi-step agent execution
 
 ---
 
-## 13. Guiding Principle
+## Guiding Principle
 
-> The system is correct only if all invariants hold globally.
+> Global rules constrain behavior. Task memory preserves continuity.
 
-Local correctness is insufficient.
-
-
-
-
+Together, they form a minimal control architecture for non-deterministic coding agents.
