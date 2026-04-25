@@ -1,5 +1,7 @@
 # AI-Assisted Trading Research & Execution Framework
 
+![AI Coding Control Architecture](./assets/ai-agent-engineering.png)
+
 ## 1. Overview
 
 This repository implements a structured framework for **research, validation, and deployment of algorithmic trading strategies**, with explicit support for **AI-assisted code generation and review**.
