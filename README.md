@@ -1,19 +1,21 @@
-# AI-Assisted Trading Research & Execution Framework
+# AI Agent Framework for Reliable Code Generation and Review
 
 ![AI Coding Control Architecture](./assets/ai-agent-engineering.png)
 
 ## 1. Overview
 
-This repository implements a structured framework for **research, validation, and deployment of algorithmic trading strategies**, with explicit support for **AI-assisted code generation and review**.
+This repository presents a structured framework for **AI-assisted software development**, focused on improving the reliability of code generation, modification, and review.
 
-The system is designed around a core principle:
+The core problem addressed is:
 
-> **All changes must preserve global system invariants, not just local correctness.**
+> Large language models produce locally plausible code that frequently violates global system constraints.
 
-It integrates:
-- Research pipelines (data → features → models → evaluation)
-- Live execution systems
-- AI-assisted development workflows with formalized failure modes
+This framework introduces:
+- Explicit **system invariants**
+- A taxonomy of **LLM failure modes**
+- A disciplined **development and review protocol**
+
+The objective is to transform AI-assisted coding from heuristic iteration into a **constraint-driven engineering process**.
 
 ---
 
