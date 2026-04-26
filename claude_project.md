@@ -107,19 +107,100 @@ Before committing:
 
 ---
 
-## 8. Task Continuity
+## 8. Task Memory
 
-For multi-step or long-running work:
+Multi-step tasks must maintain an explicit, persistent state in `task_memory/<task-name>.md`.
 
-- Maintain a task record (under `task_memory/`)
-- Track:
-  - progress
-  - decisions
-  - open issues
-  - next steps
+### Purpose
 
-At session boundaries:
-- Update task state
+Task memory preserves **continuity across plan–implement–revise cycles**.
+
+It is the primary mechanism to prevent:
+- context loss
+- repeated re-explanation
+- inconsistent decisions
+
+---
+
+### Required Structure
+
+Each task file must contain:
+
+- **Objective**
+  - What is the task trying to achieve?
+
+- **Current State**
+  - What has been implemented so far?
+  - What is known to work / not work?
+
+- **Decisions**
+  - Key choices made and why
+
+- **Open Issues**
+  - Unresolved questions or uncertainties
+
+- **Next Steps**
+  - Concrete, minimal actions to continue
+
+---
+
+### Usage Protocol
+
+**At task start:**
+- Check if a relevant task file exists
+- If yes: read it before planning
+- If no: propose creating one for non-trivial tasks
+
+---
+
+**During execution:**
+- Keep plans small (single logical step)
+- After each step:
+  - update Current State
+  - update Decisions if applicable
+  - update Open Issues
+
+---
+
+**At task boundaries (end of plan):**
+- Ensure the file reflects the true system state
+- Remove outdated or contradictory information
+- Add clear Next Steps
+
+---
+
+### Consistency Rules
+
+- Task memory must reflect **actual code state**, not intended state
+- Do not leave stale or conflicting entries
+- Do not duplicate information already captured in:
+  - changelog (why)
+  - design decisions (global constraints)
+
+---
+
+### When to Use
+
+Create or use task memory if:
+
+- the task requires more than one implementation step
+- the task spans multiple files or modules
+- the task involves uncertainty or investigation
+
+---
+
+### When to Close
+
+- Move completed tasks to `task_memory/done/`
+- Do not delete task history
+
+---
+
+### Key Principle
+
+- Keep steps small, but keep state persistent.
+
+Task memory enables reliable long-horizon reasoning with limited context.
 
 **Rule:** Work must be resumable without loss of context.
 
